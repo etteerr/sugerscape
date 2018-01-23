@@ -4,7 +4,7 @@ from IPython import display
 import random
 import time
 from numba import jit
-#from IPython.core.debugger import set_trace
+from IPython.core.debugger import set_trace
 import sys
 import copy
 from matplotlib import animation, rc
@@ -420,6 +420,87 @@ class Resource():
         
         
         
+class Visualizer():
+    import matplotlib.pyplot as pl
+    '''
+        Visualizer class.
+        Takes a model class as initializer
+        Helps with visualizing things
+    '''
+    
+    def __init__(self, Model):
+        '''Visualizer init'''
+        self.model = Model;
+        
+    def clear(self):
+        display.clear_output(wait=True);
+        
+    def show(self, fig):
+        display.display(fig);
+        
+    def plot_grid(self, return_axis = True, return_fig = False, new_fig = True, legend=False, scale_to_capacity = True):
+        '''
+            Plots resources (max 2) and agents in a image plot
+            using the 3 color channels
+            
+            Required:
+                model.grid
+                model.grid.resources (length == 2)
+        ''' 
+        assert(self.model.grid is not None), "grid required to plot grid";
+        assert(len(self.model.grid.resources)<=2), "Requires 2 resources";
+        
+        #Init figure
+        if new_fig:
+            fig = pl.figure();
+        else:
+            fig = pl.gcf(); #Get current fig
+            
+        #Gather data
+        r_names = list(self.model.grid.resources.keys());
+        # Gather r1 & r2 
+        r1 = self.model.grid.resources[r_names[0]];
+        r2 = self.model.grid.resources[r_names[1]];
+        
+        #Create resource mapping
+        if scale_to_capacity:
+            r = r1.resourceMap/np.max(r1.capacity);
+            g = r2.resourceMap/np.max(r2.capacity);
+        else:
+            r = r1.resourceMap/np.max(r1.resourceMap);
+            g = r2.resourceMap/np.max(r2.resourceMap);
+        
+        # Map agents
+        b = copy.copy(self.model.grid.agents);
+        b[b>0] = 1.0;
+        
+        # Create image (by stacking channels)
+        data = np.dstack((r,b,g))
+        
+        # Plot image (img contains AxesImage)
+        img = pl.imshow(np.transpose(data, axes=(1,0,2)), interpolation='nearest', origin='down');
+        
+        #Return request
+        if return_axis:
+            return img;
+        if return_fig:
+            return fig;
+        return None; # default if no return is specified
+    
+    def animate_axis_array(self, array, fig, html_vid=True, filename=None, fps=15, clear_output=False):
+        if clear_output:
+            self.clear();
+        
+        ani = animation.ArtistAnimation(fig, array, interval=np.ceil(1000/fps), blit=True,repeat_delay=0)
+        
+        if html_vid:
+            hf = HTML(ani.to_html5_video())
+            self.show(hf);
+        
+        if filename is not None:
+            Writer = animation.writers['ffmpeg']
+            writer = Writer(fps=fps, metadata=dict(artist='Me'), bitrate=1800)
+            ani.save('sim.mp4',writer=writer)
         
 #### Regular help functions ####
 def normalize_dict(d):
