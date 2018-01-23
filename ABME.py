@@ -11,9 +11,12 @@ from matplotlib import animation, rc
 from IPython.display import HTML
 
 class Grid():
-    #                 left     right    up     down
-    neighbourhood = np.array([[-1, 0], [1, 0], [0, 1], [0, -1]]);
-    neighbourhood_names = ['left', 'right', 'up', 'down'];
+    neighbourhood_dict = {
+        'left': np.array([-1, 0]), 
+        'right':np.array([1, 0]), 
+        'up':   np.array([0, 1]), 
+        'down': np.array([0, -1])
+    };
     resources = dict();
     
     def __init__(self, size):
@@ -22,6 +25,14 @@ class Grid():
         self.height = size;
         self.size = size;
         self.resources = dict();
+        
+        #'Legacy' variables
+        self.neighbourhood = np.array([val for key,val in self.neighbourhood_dict.items()]);
+        self.neighbourhood_names = np.array([key for key,val in self.neighbourhood_dict.items()]);
+        
+        # Assert vectors are alligned
+        for key, val in self.neighbourhood_dict.items():
+            assert(val == self.neighbourhood[self.neighbourhood_names == key]).all();
     
     '''
         Initializes the agents position by placing the agent in the grid
@@ -99,7 +110,7 @@ class Grid():
         npos = move_to;
         
         if move_name is not None:
-            npos = cpos + self.neighbourhood[self.neighbourhood_names.index(move_name)];
+            npos = cpos + self.neighbourhood_dict[move_name];
         
         if move is not None:
             npos = cpos + move;
@@ -113,6 +124,8 @@ class Grid():
                 npos = random.choice(canidates);
             else:
                 return False
+            
+        npos = np.array(npos);
             
         npos %= self.size;
         
