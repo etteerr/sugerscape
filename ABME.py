@@ -258,6 +258,7 @@ class Model():
     agents = [];
     id_tick = 1;
     step_order = 'random';
+    trackers = [];
     
     def __init__(self):
         self.tick = 0; 
@@ -323,6 +324,13 @@ class Model():
     def step(self):
         self.step_move();
         self.step_act();
+        self.track();
+    
+    def track(self):
+        if self.trackers is not None:
+            for tracker in self.trackers:
+                tracker.track();
+        
             
             
             
@@ -349,7 +357,7 @@ class Resource():
                 circular growth with strength 4 (integers)
                     - lambda x: np.round(4/((0.1*x)+1))
     '''
-    def grow(self,cx,cy, fun=lambda x : np.round(4/((0.1*x)+1)), radius=None, invert=False, apply=True):
+    def grow(self,cx,cy, fun=lambda x : np.round(4/((0.1*x)+1)), radius=None, invert=False, apply=True, scale=True):
         field = [[np.sqrt((x - cx)**2 + (y - cy)**2) for y in range(self.size)] for x in range(self.size)];
         field = np.array(field);
         
@@ -358,15 +366,18 @@ class Resource():
             if invert:
                 m = np.max(field);
                 field = m/(field+1);
+            if scale: field /= np.sqrt(2*(self.size**2));
             field = fun(field);
             field[mask] = 0;
         else:
             if invert:
                 m = np.max(field);
                 field = m/(field+1);
+            if scale: field /= np.sqrt(2*(self.size**2));
             field = fun(field);
         #Add field of resources to resourceMap;
         self.resourceMap += field;
+        
         if apply: self.apply_capacity();
         
     '''
@@ -379,7 +390,7 @@ class Resource():
     def decay(self, fun=lambda x: 0.95*x):
         self.resourceMap = fun(self.resourceMap);
         
-    def set_capacity(self,cx,cy, fun=lambda x: np.round(4/((0.1*x)+1)), radius=None, invert=False, apply=True):
+    def set_capacity(self,cx,cy, fun=lambda x: np.round(4/((0.1*x)+1)), radius=None, invert=False, apply=True, scale=True):
         field = [[np.sqrt((x - cx)**2 + (y - cy)**2) for y in range(self.size)] for x in range(self.size)];
         field = np.array(field);
         
@@ -388,12 +399,14 @@ class Resource():
             if invert:
                 m = np.max(field);
                 field = m/(field+1);
+            if scale: field /= np.sqrt(2*(self.size**2));
             field = fun(field);
             field[mask] = 0;
         else:
             if invert:
                 m = np.max(field);
                 field = m/(field+1);
+            if scale: field /= np.sqrt(2*(self.size**2));
             field = fun(field);
         #Set capacity
         if self.capacity is None:
@@ -501,6 +514,58 @@ class Visualizer():
             Writer = animation.writers['ffmpeg']
             writer = Writer(fps=fps, metadata=dict(artist='Me'), bitrate=1800)
             ani.save('sim.mp4',writer=writer)
+
+class Tracker():
+    '''
+        Tracker class
+        Tracks variables in the model
+    '''
+    def __init__(self, model=None, filename=None):
+        if model is not None:
+            self.model = model;
+            model.trackers.append(self);
+        if filename is not None:
+            import pickle
+            with open(filename, 'rb') as f:
+                (self.data, self.trackers) = pickle.load(f);
+        else:
+            self.data = dict();
+            self.trackers = dict();
+            
+        
+            
+    def add_tracker(self, name, track_fun = lambda model: len(model.agents)):
+        '''
+            Adds a tracker
+            
+            track_fun is a function to be called every iteration of the model.
+            It recieves the model as its only argument and its return value is appended to the data
+            under the name specified as [name]
+            
+            track_fun: The data gatherer function
+        '''
+        self.trackers[name] = track_fun;
+        self.data[name] = [];
+        
+    def track(self):
+        assert(self.model is not None), "Can only track when a model is specified";
+        for key,fun in self.trackers.items():
+            self.data[key].append(fun(self.model));
+    
+    def get_data(self, name=None):
+        if name is None:
+            return data;
+        else:
+            return data[name];
+    
+    def save_data(self, filename):
+        import pickle
+        with open(filename, 'wb') as f:
+            pickle.dump((self.data, self.trackers), f);
+            
+            
+    def __getitem__(self, key):
+        return self.data[key];
         
 #### Regular help functions ####
 def normalize_dict(d):
