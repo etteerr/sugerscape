@@ -4,7 +4,7 @@ from IPython import display
 import random
 import time
 from numba import jit
-from IPython.core.debugger import set_trace
+#from IPython.core.debugger import set_trace
 import sys
 import copy
 from matplotlib import animation, rc
