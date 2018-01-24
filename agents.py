@@ -216,4 +216,5 @@ class SugerAgent(Agent):
         
         
 class EvolutionAgent(SugerAgent):
+    pass
     

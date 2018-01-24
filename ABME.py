@@ -573,4 +573,103 @@ def normalize_dict(d):
     for k in d:
         d[k] = d[k]*factor
     
+def simulate(agents, cap, reg, iterations=100, tracker=None, grid_size=50):
+    #Setup objects
+    # First create a grid for the model and the model itself
+    g = Grid(grid_size);
+    m = Model();
+    m.dead = []; #Create a list for the dead
+    #and add the grid to the model
+    m.set_grid(g);
+
+    # Create a visualizer and a tracker
+
+    if tracker is not None:
+        tracker.model = m;
+        m.tracker.append(tracker)
+        
+    #Later, tracker['Population'] can be used to get the population data
+
+    #Create 2 resources, these are automatically added to the grid [g]
+    r1 = Resource("Kerbonite", g);
+    r2 = Resource("Ebolite", g);
+
+#     # Create a capacity function and regrowth function
+#     cap=lambda x:np.round(4*np.exp(-(x**2)/(2*(0.05)**2))); #  x=distance from center(given in grow)
+#     reg=lambda x:0.5; # Uniform growth of 0.5, x is ignore
+
+    # Set capacity
+    #    scale = true makes the distance from center from [0, 1]
+    #    Making a bigger map thus keeps the ratios of resources equal
+    #    scale = True is default
+    r1.set_capacity(20,20, fun=cap, scale=True);
+    r2.set_capacity(35,20, fun=cap, scale=True);
+
+    # grow to the given capacity (such that there are resources available in the first tick)
+    r1.grow(20,20, fun=cap);
+    r2.grow(35,20, fun=cap);
+
+    #add agents
+    for a in agents:
+        m.add_agent(a, init_agent = True)
+    
+#     for i in range(1000):
+#         a = SugerAgent();
+#         a.wealth_low = 10;
+#         a.wealth_high = 20;
+#         a.metabolism_low = 1; #make dependend on vision and... other parameters?
+#         a.metabolism_high = 4;
+#         a.vision_low = 1;
+#         a.vision_high = 5;
+#         m.add_agent(a);
+#         #print(a);
+
+    # or add a single test agent
+    # a = SugerAgent();
+    # #Modify random variables before adding the agent
+    # # Modifying other variables which are randomly initialized, like vision, have no effect
+    # # before the add_agent call has been made as this call initializes these variables
+    # a.wealth_low = 10;
+    # a.wealth_high = 11;
+    # #Add the agent
+    # #    This call also initializes the agents values based on the _low _high
+    # #    From nowon, modifying things like wealth_low, has no effect
+    # m.add_agent(a, position=[35,35]); 
+    # #Set variables of this agent
+    # a.max_age = 20000;
+    # a.metabolism = 0.1;
+    # a.vision = 30;
+
+    # simulate
+    times = [];
+    times_render = [];
+    imgs = [];
+    #pl.figure(figsize=(10,10))
+    for i in range(iterations):
+        # Record time (not needed)
+        t = time.time();
+
+        # Core loop
+        r1.grow(20,20,fun=reg);
+        r2.grow(35,20, fun=reg);
+        # following 3 calls is the same as m.step()
+        m.step_move();
+        m.step_act();
+        m.track(); #Using all trackers, save data
+
+        # Record time (not Needed)
+        times.append(time.time() - t);
+
+        #Render
+#       img = vis.plot_grid(new_fig=False);
+#       imgs.append([img]);
+
+        #Record time (render) 
+        times_render.append(time.time() - t);
+
+        #Break if all agents have dieded
+        if len(m.agents) == 0:
+            break;
+            
+    return m;
     
