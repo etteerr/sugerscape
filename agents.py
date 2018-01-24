@@ -101,6 +101,12 @@ class SugerAgent(Agent):
             assert(v>=0), "Wut? should be dead"
         direction = self.choose_direction();
         self.grid.move_agent(self, move_name=direction, move_to=None, move=None, move_idx=None);
+        
+    '''
+        The direction utility calculator
+    '''
+    def movUtility(self, highestResource, distance, resource):
+        return (max_val)/(0.001 * self.wealth[resource] + 0.1 * distance);
                     
     
     def choose_direction(self):
@@ -129,7 +135,7 @@ class SugerAgent(Agent):
             #Determine utility, if something was found
             if not distance == 9999:
                 #Note: Dont be negative!
-                utility = (max_val)/(0.001 * self.wealth[resource] + 0.1 * distance);
+                utility = self.movUtility(max_val, distance, resource);
                 
                 # Tetst utility is not negative
                 if utility < 0:
@@ -216,4 +222,55 @@ class SugerAgent(Agent):
         
         
 class EvolutionAgent(SugerAgent):
+    self.genome = None;
+    self.genome_if = ['vision', ];
+    def __init__(self):
+        
+    '''
+        Define how the agent moves
+    '''
+    def move(self):
+        for k,v in self.wealth.items():
+            assert(v>=0), "Wut? should be dead"
+        direction = self.choose_direction();
+        self.grid.move_agent(self, move_name=direction, move_to=None, move=None, move_idx=None);
+        
     
+    '''
+        Define what the agent does (except for movement)
+    '''
+    def act(self):
+        #harvest
+        self.grid.harvest(self, self.harvest_eff);
+        #Metabolise
+        self.metabolism = (4*self.vision/);
+        for n in self.wealth:
+            self.wealth[n] -= self.metabolism * self.needs[n];
+        
+        for k,r in self.wealth.items():
+            if r < 0:
+                self.die();
+                return; #Cant die twice
+            
+        # Age
+        self.age += 1;
+        
+        # reproduce
+        '''
+        accumulated_wealth = sum(self.wealth.values());
+        if accumulated_wealth > 10:
+            offspring = SugerAgent();
+            canidate_places= self.model.grid.get_move_canidates(self);
+            if len(canidate_places) > 0:
+                self.model.add_agent(offspring, position=random.choice(canidate_places));
+                for key in self.wealth:
+                    self.wealth[key] -= 5;
+         '''   
+        
+            
+    def die(self):
+        self.model.remove_agent(self);
+        self.model.dead.append(self);
+        
+    def fitness(self):
+        pass
