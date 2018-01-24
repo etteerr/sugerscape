@@ -514,6 +514,55 @@ class Visualizer():
             Writer = animation.writers['ffmpeg']
             writer = Writer(fps=fps, metadata=dict(artist='Me'), bitrate=1800)
             ani.save('sim.mp4',writer=writer)
+    
+    def plot_wealth_hist(self, show=True, return_fig=False):
+        """
+        Create histogram of all resources defined
+        
+        Returns list of list of figure and axis if return_fig is true
+        """
+        agents = self.model.agents;
+        resources = self.model.grid.resources;
+        pl.ioff(); #suppress plotting before show()
+        if return_fig:
+            figs = []
+        for resource in resources:
+            fig, ax = pl.subplots();
+            ax.hist([agent.wealth[resource] for agent in agents]);
+            ax.set_title("Wealth histogram for resource %s"%(resource));
+            ax.set_xlabel("Wealth")
+            ax.set_ylabel("Count")
+            if show:
+                fig.show()
+            if return_fig:
+                figs.append([fig,ax]) #also add ax to modify figure
+        pl.ion(); #re-enable interactive plotting
+        if return_fig:
+            return figs;
+        
+    def plot_efficiency_metabolism(self, show=True, return_fig=False):
+        """
+        Create scatterplot with harvest efficiency of resource 1 times metabolism on x-axis
+        and resource 2 on y
+        
+        Returns figure and axis if return_fig is true        
+        """
+        
+        agents = self.model.agents;
+        resources = list(self.model.grid.resources);
+        x = [agent.harvest_eff[resources[0]] * agent.metabolism for agent in agents];
+        y = [agent.harvest_eff[resources[1]] * agent.metabolism for agent in agents];
+        pl.ioff(); #suppress plotting before show()
+        fig, ax = pl.subplots();
+        ax.scatter(x,y);
+        ax.set_title("Scatterplot of harvest efficiency times metabolism");
+        ax.set_xlabel("Harvest efficiency (%s)"%(resources[0]));
+        ax.set_ylabel("Harvest efficiency (%s)"%(resources[1]));
+        pl.ion(); #re-enable interactive plotting
+        if show:
+            fig.show();
+        if return_fig:
+            return fig, ax; #also add ax to modify figure
 
 class Tracker():
     '''
