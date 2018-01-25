@@ -270,6 +270,7 @@ class Model():
     id_tick = 1
     step_order = 'random'
     trackers = []
+    dead = [];
 
     def __init__(self):
         self.tick = 0
@@ -332,6 +333,8 @@ class Model():
 
         for agent in step_order:
             agent.act()
+        
+        self.tick += 1;
 
     def step(self):
         self.step_move()
@@ -490,8 +493,11 @@ class Visualizer():
     def clear(self):
         display.clear_output(wait=True)
 
-    def show(self, fig):
-        display.display(fig)
+    def show(self, fig=None):
+        if fig is None:
+            display.display();
+        else:
+            display.display(fig)
 
     def plot_grid(self, return_axis=True, return_fig=False, new_fig=True, legend=False, scale_to_capacity=True):
         '''
@@ -584,7 +590,7 @@ class Visualizer():
         if return_fig:
             return figs
 
-    def plot_efficiency_metabolism(self, show=True, return_fig=False):
+    def plot_needs_metabolism(self, show=True, return_fig=False):
         """
         Create scatterplot with harvest efficiency of resource 1 times metabolism on x-axis
         and resource 2 on y
@@ -594,19 +600,19 @@ class Visualizer():
 
         agents = self.model.agents
         resources = list(self.model.grid.resources)
-        x = [agent.harvest_eff[resources[0]] *
+        x = [agent.needs[resources[0]] *
              agent.metabolism for agent in agents]
-        y = [agent.harvest_eff[resources[1]] *
+        y = [agent.needs[resources[1]] *
              agent.metabolism for agent in agents]
         pl.ioff()  # suppress plotting before show()
         fig, ax = pl.subplots()
         ax.scatter(x, y)
-        ax.set_title("Scatterplot of harvest efficiency times metabolism")
-        ax.set_xlabel("Harvest efficiency (%s)" % (resources[0]))
-        ax.set_ylabel("Harvest efficiency (%s)" % (resources[1]))
+        ax.set_title("Scatterplot of metabolic needs times metabolism rate")
+        ax.set_xlabel("metabolic needs (%s)" % (resources[0]))
+        ax.set_ylabel("metabolic needs (%s)" % (resources[1]))
         pl.ion()  # re-enable interactive plotting
         if show:
-            fig.show()
+            self.show(fig);
         if return_fig:
             return fig, ax  # also add ax to modify figure
 

@@ -245,7 +245,8 @@ class EvolutionAgent(SugerAgent):
     needs_genome_offset = 4;
     
     def __init__(self):
-            self.genome = np.random.rand(len(self.genome_if)) * 10 - 5;
+        self.genome = np.random.rand(len(self.genome_if)) * 10 - 5;
+        self.age = 0;
             
     def init(self):
         assert(self.model is not None), "Model is None, was agent added to model?";
@@ -257,16 +258,14 @@ class EvolutionAgent(SugerAgent):
         if \
         np.round(self.genome[0]) <= 0 or \
         self.genome[4] < 0 or \
-        self.genome[5] < 0:
-            self.die();
+        self.genome[5] < 0 or\
+        self.genome[4] == -self.genome[5]:
+            self.model.remove_agent(self)
         
         # Initialize wealth
         self.wealth = dict();
         for r_name in self.grid.resources:
             self.wealth[r_name] = np.random.randint(self.wealth_low, self.wealth_high);
-            
-        # age
-        self.age = 0;
         
         # Metabolism
         self.metabolism = 0.5 * self.genome[0] + 1; #1/2 vision is metabolism (7 is thus evolutionary max vis)
@@ -278,6 +277,10 @@ class EvolutionAgent(SugerAgent):
             self.needs[r_name] = self.genome[self.needs_genome_offset + i];
             i+=1;
         normalize_dict(self.needs); #make vectorlength 1
+        i = 0;
+        for k,v in self.needs.items():
+            self.genome[self.needs_genome_offset + i] = v; #Normalize genome for needs
+            i+=1;
         
         #harvest efficiency
         self.harvest_eff = dict();
@@ -325,14 +328,17 @@ class EvolutionAgent(SugerAgent):
         The direction utility calculator
     '''
     def movUtility(self, highestResource, distance, resource):
-        return self.genome[1] * highestResource + self.genome[2] * self.wealth[resource] + self.genome[3] * distance;
+        totwealth = 0;
+        for k,v in self.wealth.items():
+            totwealth += v;
+        return self.genome[1] * highestResource + self.genome[2] * (self.wealth[resource]/totwealth) + self.genome[3] * distance;
         
     def fitness(self):
         fitness = 0
         for k, v in self.wealth.items():
-            fitness += v
+            fitness += v * self.needs[k];
         
-        #fitness += self.age;
+        fitness *= self.age/1000;
 
         return fitness
     
