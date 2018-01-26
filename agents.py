@@ -243,6 +243,7 @@ class EvolutionAgent(SugerAgent):
     genome = None;
     genome_if = ['vision', 'alpha', 'beta', 'gamma', 'needs1', 'needs2'];
     needs_genome_offset = 4;
+    vis_metb_factor = 0.2; # The factor of vision that is taken in for metabolism
     
     parent_fitness = 0;
     
@@ -254,6 +255,13 @@ class EvolutionAgent(SugerAgent):
         self.genome[5] = np.abs(self.genome[5])
         # inits
         self.age = 0;
+        
+    def geneticly_dead(self):
+        return \
+        np.round(self.genome[0]) <= 0 or \
+        self.genome[4] < 0 or \
+        self.genome[5] < 0 or\
+        self.genome[4] == -self.genome[5]
             
     def init(self):
         assert(self.model is not None), "Model is None, was agent added to model?";
@@ -262,11 +270,7 @@ class EvolutionAgent(SugerAgent):
         # Die if we have invalid genome
             #Vision is smaller than 0
             #or a need is smaller than 0
-        if \
-        np.round(self.genome[0]) <= 0 or \
-        self.genome[4] < 0 or \
-        self.genome[5] < 0 or\
-        self.genome[4] == -self.genome[5]:
+        if self.geneticly_dead():
             self.model.remove_agent(self)
         
         # Initialize wealth
@@ -275,7 +279,7 @@ class EvolutionAgent(SugerAgent):
             self.wealth[r_name] = np.random.randint(self.wealth_low, self.wealth_high);
         
         # Metabolism
-        self.metabolism = 0.1 * (self.genome[0]) + 1; #1/2 vision is metabolism (7 is thus evolutionary max vis)
+        self.metabolism = self.vis_metb_factor * (self.genome[0]) + 1; # Metabolism consits of ax + b where x is vision
         
         # What resources are needed to fill the metabolism
         self.needs = dict();
