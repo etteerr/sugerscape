@@ -590,7 +590,7 @@ class Visualizer():
         if return_fig:
             return figs
 
-    def plot_needs_metabolism(self, show=True, return_fig=False):
+    def plot_needs_metabolism(self, show=True, return_fig=False, seperate_above_mean=True):
         """
         Create scatterplot with harvest efficiency of resource 1 times metabolism on x-axis
         and resource 2 on y
@@ -600,16 +600,32 @@ class Visualizer():
 
         agents = self.model.agents
         resources = list(self.model.grid.resources)
-        x = [agent.needs[resources[0]] *
-             agent.metabolism for agent in agents]
-        y = [agent.needs[resources[1]] *
-             agent.metabolism for agent in agents]
+        if seperate_above_mean:
+            average_fitness = np.mean([a.fitness() for a in agents]);
+        else:
+            average_fitness = -9999;
+            
         pl.ioff()  # suppress plotting before show()
         fig, ax = pl.subplots()
-        ax.scatter(x, y)
+        
+        if seperate_above_mean: 
+            x = [agent.needs[resources[0]] *
+                 agent.metabolism for agent in agents if agent.fitness() < average_fitness]
+            y = [agent.needs[resources[1]] *
+                 agent.metabolism for agent in agents if agent.fitness() < average_fitness]
+            ax.scatter(x, y, c='r')
+        
+        x = [agent.needs[resources[0]] *
+             agent.metabolism for agent in agents if agent.fitness() >= average_fitness]
+        y = [agent.needs[resources[1]] *
+             agent.metabolism for agent in agents if agent.fitness() >= average_fitness]
+        ax.scatter(x, y, c='lime')
+        
+        
         ax.set_title("Scatterplot of metabolic needs times metabolism rate")
         ax.set_xlabel("metabolic needs (%s)" % (resources[0]))
         ax.set_ylabel("metabolic needs (%s)" % (resources[1]))
+        if seperate_above_mean: pl.legend(['Above average fitness'], ['Below average fitness']);
         pl.ion()  # re-enable interactive plotting
         if show:
             self.show(fig);

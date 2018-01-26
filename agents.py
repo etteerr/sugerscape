@@ -244,8 +244,15 @@ class EvolutionAgent(SugerAgent):
     genome_if = ['vision', 'alpha', 'beta', 'gamma', 'needs1', 'needs2'];
     needs_genome_offset = 4;
     
+    parent_fitness = 0;
+    
     def __init__(self):
-        self.genome = np.random.rand(len(self.genome_if)) * 10 - 5;
+        self.genome = (np.random.rand(len(self.genome_if)) * 10) - 5;
+        #Make more genomes valid
+        self.genome[0] = np.abs(self.genome[0]) + 1;
+        self.genome[4] = np.abs(self.genome[4])
+        self.genome[5] = np.abs(self.genome[5])
+        # inits
         self.age = 0;
             
     def init(self):
@@ -268,7 +275,7 @@ class EvolutionAgent(SugerAgent):
             self.wealth[r_name] = np.random.randint(self.wealth_low, self.wealth_high);
         
         # Metabolism
-        self.metabolism = 0.5 * self.genome[0] + 1; #1/2 vision is metabolism (7 is thus evolutionary max vis)
+        self.metabolism = 0.1 * (self.genome[0]) + 1; #1/2 vision is metabolism (7 is thus evolutionary max vis)
         
         # What resources are needed to fill the metabolism
         self.needs = dict();
@@ -334,13 +341,13 @@ class EvolutionAgent(SugerAgent):
         return self.genome[1] * highestResource + self.genome[2] * (self.wealth[resource]/totwealth) + self.genome[3] * distance;
         
     def fitness(self):
-        fitness = 0
+        fitness = 1
         for k, v in self.wealth.items():
-            fitness += v * self.needs[k];
+            fitness += v;
         
-        fitness *= self.age/1000;
+        fitness *= (np.sqrt(self.age))/1000; #Pressure vision
 
-        return fitness
+        return fitness + np.sqrt(self.parent_fitness)
     
     '''
         Describe the agent as a string
