@@ -610,19 +610,19 @@ class Visualizer():
         
         if seperate_above_mean: 
             x = [agent.needs[resources[0]] *
-                 agent.metabolism for agent in agents if agent.fitness() < average_fitness]
+                 agent.genome[0] for agent in agents if agent.fitness() < average_fitness]
             y = [agent.needs[resources[1]] *
-                 agent.metabolism for agent in agents if agent.fitness() < average_fitness]
+                 agent.genome[0] for agent in agents if agent.fitness() < average_fitness]
             ax.scatter(x, y, c='r')
         
         x = [agent.needs[resources[0]] *
-             agent.metabolism for agent in agents if agent.fitness() >= average_fitness]
+             agent.genome[0] for agent in agents if agent.fitness() >= average_fitness]
         y = [agent.needs[resources[1]] *
-             agent.metabolism for agent in agents if agent.fitness() >= average_fitness]
+             agent.genome[0] for agent in agents if agent.fitness() >= average_fitness]
         ax.scatter(x, y, c='lime')
         
         
-        ax.set_title("Scatterplot of metabolic needs times metabolism rate")
+        ax.set_title("Scatterplot of metabolic needs times genomic vision")
         ax.set_xlabel("metabolic needs (%s)" % (resources[0]))
         ax.set_ylabel("metabolic needs (%s)" % (resources[1]))
         if seperate_above_mean: pl.legend(['Above average fitness'], ['Below average fitness']);
