@@ -339,7 +339,7 @@ class EvolutionAgent(SugerAgent):
         The direction utility calculator
     '''
     def movUtility(self, highestResource, distance, resource):
-        totwealth = 0;
+        totwealth = 1;
         for k,v in self.wealth.items():
             totwealth += v;
         return self.genome[1] * highestResource + self.genome[2] * (self.wealth[resource]/totwealth) + self.genome[3] * distance;
@@ -351,7 +351,7 @@ class EvolutionAgent(SugerAgent):
         
         fitness *= (np.sqrt(self.age))/1000; #Pressure vision
 
-        return fitness + np.sqrt(self.parent_fitness)
+        return fitness# + np.sqrt(self.parent_fitness)
     
     '''
         Describe the agent as a string
